@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise for You 💌</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Mali', cursive;
+            background-color: #fff0f3;
+            color: #5a4a4a;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #envelope-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+        }
+
+        .tap-text {
+            color: #ff6b8b;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .envelope-wrapper {
+            position: relative;
+            width: 320px;
+            height: 220px;
+            cursor: pointer;
+            margin-bottom: 50px;
+        }
+
+        .env-back {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: #ff85a1;
+            border-radius: 10px;
+            z-index: 1;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .env-letter {
+            position: absolute;
+            width: 280px; height: 200px;
+            background: white;
+            top: 20px; left: 20px;
+            border-radius: 10px;
+            z-index: 2;
+            transition: all 1s ease;
+            box-sizing: border-box;
+            padding: 20px;
+            display: flex;
+            align-items: center; justify-content: center;
+            color: #ff6b8b; font-size: 18px; font-weight: bold;
+        }
+
+        .env-front {
+            position: absolute;
+            width: 100%; height: 100%;
+            background: #ff6b8b;
+            top: 0; left: 0; z-index: 3;
+            clip-path: polygon(0 0, 50% 45%, 100% 0, 100% 100%, 0 100%);
+            border-radius: 10px;
+        }
+
+        .env-flap {
+            position: absolute;
+            width: 100%; height: 120px;
+            background: #ff99b0;
+            top: 0; left: 0; z-index: 4;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            transform-origin: top;
+            transition: all 0.4s ease;
+        }
+
+        .envelope-wrapper.open .env-flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+        .envelope-wrapper.open .env-letter {
+            transform: translateY(-90px); /* เด้งขึ้นมานิดเดียวพอเป็นกิมมิค */
+        }
+
+        /* ================= ธีม Popup Modal ================= */
+        #popup-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 1s;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 280px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            border: 3px dashed #ffb3c1;
+        }
+
+        .btn-group {
+            display: flex; gap: 15px;
+            align-items: center; justify-content: center;
+            height: 80px; margin-top: 20px;
+        }
+
+        .cute-btn {
+            border: none; border-radius: 20px;
+            padding: 10px 25px; font-size: 16px;
+            font-family: 'Mali', cursive;
+            cursor: pointer; transition: 0.3s ease; white-space: nowrap;
+        }
+        .btn-yes { background: #ff6b8b; color: white; }
+        .btn-yes:hover { background: #ff4a70; }
+        .btn-no { background: #e0e0e0; color: #777; }
+
+        /* ================= หน้าอื่นๆ ================= */
+        #password-screen {
+            display: none; text-align: center; animation: fadeIn 1s;
+        }
+        .pin-group { display: flex; gap: 10px; justify-content: center; margin: 25px 0; }
+        .pin-input {
+            width: 40px; height: 50px; font-size: 24px; text-align: center;
+            border: 2px solid #ffb3c1; border-radius: 12px; outline: none;
+            font-family: 'Mali', cursive; color: #ff6b8b; background: white; transition: 0.3s;
+        }
+        .pin-input:focus { border-color: #ff6b8b; box-shadow: 0 0 10px rgba(255, 107, 139, 0.3); }
+        #error-msg { color: #ff4a70; font-size: 14px; display: none; margin-top: 15px; }
+
+        #story-screen {
+            display: none; max-width: 600px; width: 90%; padding: 40px 0;
+            text-align: center; animation: fadeIn 1.5s ease-in-out;
+        }
+        .story-card {
+            background: white; padding: 20px; border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;
+        }
+        .story-card img, .story-card video { width: 100%; border-radius: 10px; margin-bottom: 15px; }
+        .final-message { background-color: #ff6b8b; color: white; padding: 30px; border-radius: 15px; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* ================= การ์ดนับเวลา ================= */
+        .counter-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .big-days {
+            font-size: 56px;
+            color: #5a4a4a;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .small-text {
+            color: #777;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+
+        .time-boxes {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .time-box {
+            background-color: #ff6b8b;
+            color: white;
+            padding: 15px 10px;
+            border-radius: 12px;
+            min-width: 65px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(255, 107, 139, 0.3);
+        }
+
+        .time-box .num {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .time-box .label {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* ================= เอฟเฟกต์โผล่ขึ้นมาตอนเลื่อนจอ ================= */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease-in-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* ================= พื้นหลังดาวและหัวใจลอย ================= */
+        #floating-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none; /* สำคัญมาก! เพื่อไม่ให้มันบล็อกตอนเรากดปุ่มหรือกดซองจดหมาย */
+            z-index: -1; /* ดันให้อยู่หลังสุด */
+            overflow: hidden;
+        }
+
+        .float-item {
+            position: absolute;
+            bottom: -50px; /* ซ่อนไว้ใต้ขอบจอด้านล่างก่อน */
+            animation: floatUp linear infinite; /* สั่งให้ลอยขึ้นแบบวนลูป */
+            opacity: 0.7; /* ทำสีให้ดูจางๆ พาสเทลนิดนึง จะได้ไม่แย่งซีนข้อความ */
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7; /* ค่อยๆ สว่างขึ้นตอนเริ่มลอย */
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-120vh) rotate(360deg) scale(1.2); /* ลอยทะลุขอบจอบน พร้อมหมุนติ้วๆ */
+                opacity: 0; /* เฟดหายไปตอนจบลูป */
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- กล่องสำหรับใส่พื้นหลังลอยๆ -->
+    <div id="floating-bg"></div>
+    
+    <div id="envelope-screen">
+        <h2 class="tap-text">ลองแตะที่ซองจดหมายสิ</h2>
+        <div class="envelope-wrapper" onclick="openEnvelope()">
+            <div class="env-back"></div>
+            <div class="env-letter" id="letter">แอบดูอะไรจ๊ะะ 🐽</div>
+            <div class="env-front"></div>
+            <div class="env-flap"></div>
+        </div>
+    </div>
+
+    <!-- โครงสร้าง Popup -->
+    <div id="popup-modal">
+        <div class="popup-box">
+            <h2 style="color:#ff6b8b; margin:0;">รักเค้าไหมม?</h2>
+            <div class="btn-group">
+                <button id="btnYes" class="cute-btn btn-yes" onclick="goYes()">ร้ากก</button>
+                <button id="btnNo" class="cute-btn btn-no" onclick="goNo()">ม่ายย</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="password-screen">
+        <h2 style="color: #ff6b8b;">จำวันที่เค้าขอคบได้ไหม ไหนใส่วันแรกที่เราเป็นแฟนกันซิ! 💕</h2>
+        <p style="color: #777; margin-top: -10px;">(ใส่ตัวเลข 6 หลัก วว/ดด/ปป เช่น 280206)</p>
+        
+        <div class="pin-group">
+            <input type="tel" maxlength="1" class="pin-input" oninput="moveNext(this)" onkeydown="checkBack(this, event)">
+            <input type="tel" maxlength="1" class="pin-input" oninput="moveNext(this)" onkeydown="checkBack(this, event)">
+            <input type="tel" maxlength="1" class="pin-input" oninput="moveNext(this)" onkeydown="checkBack(this, event)">
+            <input type="tel" maxlength="1" class="pin-input" oninput="moveNext(this)" onkeydown="checkBack(this, event)">
+            <input type="tel" maxlength="1" class="pin-input" oninput="moveNext(this)" onkeydown="checkBack(this, event)">
+            <input type="tel" maxlength="1" class="pin-input" oninput="moveNext(this)" onkeydown="checkBack(this, event)">
+        </div>
+        <button class="cute-btn btn-yes" onclick="checkPassword()" style="padding: 12px 30px; font-size: 18px;">ปลดล็อก 🔑</button>
+        <p id="error-msg">ฮือออ จำไม่ได้หรอเธออ ลองนึกดูดีๆ คับบ 🥺</p>
+    </div>
+
+        <!-- ================= หน้า 3: Story ================= -->
+    <div id="story-screen">
+        <h2 style="color: #ff6b8b;" class="reveal">Happy Anniversary 1 year 3 months krub! 🫶</h2>
+        <p class="reveal">เธอเก่งม้ากกก! จำวันที่เค้าขอคบได้ด้วย น่ารักที่สุดเลยยย</p>
+
+        <!-- การ์ดนับเวลาตั้งแต่คบกัน -->
+        <div class="story-card reveal">
+            <h3 style="color: #777; font-weight: normal;">ตั้งแต่วันแรกที่คบกัน</h3>
+            <div class="counter-container">
+                <!-- วันที่คบกันทั้งหมดตัวใหญ่ -->
+                <div class="big-days" id="total-days">0</div>
+                <div class="small-text">วันแล้วนะะ !</div>
+                
+                <!-- กล่องเวลา 4 กล่อง -->
+                <div class="time-boxes">
+                    <div class="time-box">
+                        <span class="num" id="box-days">0</span>
+                        <span class="label">วัน</span>
+                    </div>
+                    <div class="time-box">
+                        <span class="num" id="box-hours">0</span>
+                        <span class="label">ชั่วโมง</span>
+                    </div>
+                    <div class="time-box">
+                        <span class="num" id="box-minutes">0</span>
+                        <span class="label">นาที</span>
+                    </div>
+                    <div class="time-box">
+                        <span class="num" id="box-seconds">0</span>
+                        <span class="label">วินาที</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- การ์ดข้อความ -->
+        <div class="story-card reveal">
+            <p>ขอบคุณที่อยู่ข้างๆ กันมาตลอด รักมากๆ นะ 💕</p>
+        </div>
+
+        <!-- การ์ดรูปภาพ -->
+        <div class="story-card reveal">
+            <img src="IMG_20250406_145030.jpg" alt="Memory 1">
+            <h3 style="color: #ff6b8b;">จำเหตุการณ์นี้ได้ไหม?</h3>
+            <div class="small-text">06/04/2568</div>
+            <p>วันนั้นเค้าตื่นเต้นมากๆ เลยที่ได้เจอเธอ เค้าจำได้ครั้งนี้ครั้งที่ 2 เรียกเที่ยวได้ไหมนะ 55555 
+            แต่ว่าครั้งแรกที่เจอ เธอร้ายน้าาา บอกขาดคน ที่ไหนได้อยากเจอเค้าละสิ จับมือครั้งแรกด้วยย
+            เป็นความทรงจำที่เค้าไม่ลืมเลยย คิดแล้วเขินน</p>
+        </div>
+
+        <div class="story-card reveal">
+            <img src="First_Date.jpg" alt="Memory 2">
+            <h3 style="color: #ff6b8b;">จำวันนี้ได้ไหม?</h3>
+            <div class="small-text">15/06/2568</div>
+            <p>เป็นวันที่เค้ามีความสุขที่สุดเลย เป็นความรู้สึกที่บอกไม่ถูกจริงๆ
+            เค้าแบบว่าตื่นเต้นมากๆ ทั้งสนุก ทั้งเอนจอย และก็ได้บอกความรู้สึกของตัวเองไปในวันนั้น
+            ตอนที่เค้าบอกไปว่า "เป็นแฟนกันไหม" เค้าจำได้หน้าเธอแบบว่าอึ้งไปเลยยย 5555
+            จริงๆ เค้าไม่คิดว่าจะได้คำตอบแบบนั้นนะ แต่เธอก็บอกว่า "ตกลง" เค้าดีใจม้ากกก หน้าแดงก่ำาาา
+            มีอะไรหลายๆ อย่างเกิดขึ้นในวันนั้น แล้วความรักของเราก็เริ่มต้นขึ้นตั้งแต่วันนั้นเลยยยยย
+            </p>
+        </div>
+
+        <!-- การ์ดวิดีโอ (ถ้ามี) -->
+        <div class="story-card reveal">
+            <video autoplay loop muted playsinline style="width: 100%; border-radius: 10px;">
+                <source src="1003042501073.mp4" type="video/mp4">
+            </video>
+            <h3 style="color: #ff6b8b;">คิดถึงจังเลยเนอะ...</h3>
+            <p>กลับมาดูคลิปนี้ทีไรก็ยิ้มได้ตลอดเลย</p>
+        </div>
+
+        <!-- ข้อความสุดท้าย -->
+        <div class="story-card final-message reveal">
+            <h2>ถึงที่รัก... 💌</h2>
+            <p style="line-height: 1.8;">
+                อยากบอกว่าขอบคุณมากๆ นะที่อยู่ข้างๆ กันมาตลอด<br>
+                ขอบคุณที่คอยซัพพอร์ตและเป็นรอยยิ้มให้กัน<br>
+                รักมากๆ นะ และจะน่ารักแบบนี้ตลอดไปเลยยย 💕
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ================= 1. ระบบซองจดหมายและ Popup =================
+        let isEnvelopeOpen = false;
+        function openEnvelope() {
+            if(!isEnvelopeOpen) {
+                document.querySelector('.envelope-wrapper').classList.add('open');
+                isEnvelopeOpen = true;
+                document.querySelector('.tap-text').style.opacity = '0';
+                
+                setTimeout(() => {
+                    document.getElementById('popup-modal').style.display = 'flex';
+                }, 800);
+            }
+        }
+
+        let noCount = 0;
+        let yesScale = 1;
+        function goNo() {
+            noCount++;
+            yesScale += 0.3;
+            let btnYes = document.getElementById('btnYes');
+            let btnNo = document.getElementById('btnNo');
+            btnYes.style.transform = `scale(${yesScale})`;
+
+            if (noCount >= 5) {
+                btnNo.style.display = 'none';
+            } else {
+                let noScale = 1 - (noCount * 0.15);
+                btnNo.style.transform = `scale(${noScale})`;
+            }
+        }
+
+        function goYes() {
+            document.getElementById('popup-modal').style.display = 'none';
+            document.getElementById('envelope-screen').style.display = 'none';
+            document.getElementById('password-screen').style.display = 'block';
+        }
+
+        // ================= 2. ระบบรหัสผ่าน =================
+        function moveNext(elem) {
+            elem.value = elem.value.replace(/[^0-9]/g, '');
+            if (elem.value.length === 1) {
+                let next = elem.nextElementSibling;
+                if (next && next.classList.contains('pin-input')) next.focus();
+            }
+        }
+
+        function checkBack(elem, event) {
+            if (event.key === "Backspace" && elem.value === "") {
+                let prev = elem.previousElementSibling;
+                if (prev && prev.classList.contains('pin-input')) prev.focus();
+            }
+        }
+
+        function checkPassword() {
+            let inputs = document.querySelectorAll('.pin-input');
+            let pwd = "";
+            inputs.forEach(input => pwd += input.value);
+            
+            let correctPassword = "111111"; // เปลี่ยนรหัสผ่านตรงนี้ได้นะโบร๋
+            if (pwd === correctPassword) {
+                document.getElementById('password-screen').style.display = 'none';
+                document.getElementById('story-screen').style.display = 'block';
+                
+                // สั่งให้คำนวณเวลาและแสดงแอนิเมชันทันทีที่เข้ามาหน้า Story
+                updateTimer();
+                revealOnScroll(); 
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+                inputs.forEach(input => input.value = "");
+                inputs[0].focus();
+            }
+        }
+
+        // ================= 3. ระบบนับเวลาคบกัน =================
+        // ตั้งค่าวัดเริ่มต้น (15/06/2568 = 2025-06-15)
+        const startDate = new Date("2025-06-15T00:00:00").getTime(); 
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const diff = now - startDate;
+
+            if (diff > 0) {
+                const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                // ใส่ตัวเลขลงในกล่อง HTML
+                document.getElementById("total-days").innerText = totalDays;
+                document.getElementById("box-days").innerText = totalDays;
+                document.getElementById("box-hours").innerText = hours;
+                document.getElementById("box-minutes").innerText = minutes;
+                document.getElementById("box-seconds").innerText = seconds;
+            }
+        }
+        // ================= 5. ระบบพื้นหลังดาวและหัวใจลอย =================
+        function createFloatingItems() {
+            const bg = document.getElementById('floating-bg');
+            // เลือกอีโมจิที่อยากให้ลอย โบร๋สามารถเพิ่มหรือเปลี่ยนได้เลย
+            const items = ['⭐', '💖', '✨', '💕', '🤍']; 
+            const itemCount = 35; // จำนวนดวงที่อยากให้มีบนจอ (ปรับเยอะ-น้อยได้)
+
+            for (let i = 0; i < itemCount; i++) {
+                let elem = document.createElement('div');
+                elem.classList.add('float-item');
+                elem.innerText = items[Math.floor(Math.random() * items.length)];
+                
+                // สุ่มตำแหน่งโผล่ซ้ายขวา (0% ถึง 100% ของหน้าจอ)
+                elem.style.left = Math.random() * 100 + 'vw';
+                
+                // สุ่มขนาดให้เล็กใหญ่ไม่เท่ากัน (ระหว่าง 10px ถึง 25px)
+                elem.style.fontSize = (Math.random() * 15 + 10) + 'px';
+                
+                // สุ่มความเร็วในการลอย (แต่ละดวงจะใช้เวลาลอย 8 วินาที ถึง 18 วินาที)
+                elem.style.animationDuration = (Math.random() * 10 + 8) + 's';
+                
+                // สุ่มดีเลย์ตอนเริ่ม (จะได้ไม่โผล่มาพร้อมกันเป็นแผง)
+                elem.style.animationDelay = (Math.random() * 5) + 's';
+                
+                bg.appendChild(elem);
+            }
+        }
+        
+        // สั่งให้เสกดาวทันทีที่เปิดเว็บขึ้นมา
+        createFloatingItems();
+        // ให้อัปเดตตัวเลขทุกๆ 1 วินาที
+        setInterval(updateTimer, 1000);
+
+        // ================= 4. ระบบแอนิเมชันเลื่อนหน้าจอ (Scroll Reveal) =================
+        function revealOnScroll() {
+            let reveals = document.querySelectorAll('.reveal');
+            for (let i = 0; i < reveals.length; i++) {
+                let windowHeight = window.innerHeight;
+                let elementTop = reveals[i].getBoundingClientRect().top;
+                let elementVisible = 100; // ระยะที่ให้การ์ดเด้งขึ้นมา
+
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add('active');
+                }
+            }
+        }
+        // ตรวจจับการเลื่อนเมาส์
+        window.addEventListener('scroll', revealOnScroll);
+    </script>
+</body>
+</html>
